@@ -1,1 +1,4 @@
+~$*.xlsx
 test/Test*.xlsx
+*.out
+*.test
