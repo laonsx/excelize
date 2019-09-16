@@ -27,6 +27,11 @@ func (f *File) FillSheetCells(sheets Sheets) (err error) {
 			s := structs.New(row)
 			for _, field := range s.Fields() {
 
+				if field.Tag("cell") == "-" {
+
+					continue
+				}
+
 				err = f.SetCellValue(sheet.Name, fmt.Sprintf("%s%d", field.Tag("cell"), i+1), field.Value())
 				if err != nil {
 

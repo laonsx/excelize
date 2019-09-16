@@ -10,6 +10,7 @@ func TestFillSheetCells(t *testing.T) {
 		A string `cell:"A"`
 		B string `cell:"B"`
 		C int    `cell:"C"`
+		D string `cell:"-"`
 	}
 
 	var sheets Sheets
@@ -18,15 +19,15 @@ func TestFillSheetCells(t *testing.T) {
 		Sheet{
 			Name: "data",
 			Rows: []interface{}{
-				&Row{A: "a1", B: "b1", C: 1},
-				&Row{A: "a2", B: "b2", C: 2},
+				&Row{A: "a1", B: "b1", C: 1, D: "d1"},
+				&Row{A: "a2", B: "b2", C: 2, D: "d2"},
 			},
 		},
 		Sheet{
 			Name: "data2",
 			Rows: []interface{}{
-				&Row{A: "aa11", B: "bb11", C: 1},
-				&Row{A: "aa22", B: "bb22", C: 2},
+				&Row{A: "aa11", B: "bb11", C: 1, D: "dd11"},
+				&Row{A: "aa22", B: "bb22", C: 2, D: "dd22"},
 			},
 		})
 
