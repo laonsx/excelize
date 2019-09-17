@@ -7,10 +7,11 @@ import (
 func TestFillSheetCells(t *testing.T) {
 
 	type Row struct {
-		A string `cell:"A"`
+		A string `cell:"A" title:"TITLE-A"`
 		B string `cell:"B"`
-		C int    `cell:"C"`
-		D string `cell:"-"`
+		C int    `cell:"C" title:"TITLE-C"`
+		D string `cell:"-" title:"DDDDD"`
+		E string
 	}
 
 	var sheets Sheets
