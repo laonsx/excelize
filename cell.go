@@ -273,9 +273,15 @@ func (f *File) GetCellFormula(sheet, axis string) (string, error) {
 	})
 }
 
+// FormulaOpts can be passed to SetCellFormula to use other formula types.
+type FormulaOpts struct {
+	Type *string // Formula type
+	Ref  *string // Shared formula ref
+}
+
 // SetCellFormula provides a function to set cell formula by given string and
 // worksheet name.
-func (f *File) SetCellFormula(sheet, axis, formula string) error {
+func (f *File) SetCellFormula(sheet, axis, formula string, opts ...FormulaOpts) error {
 	xlsx, err := f.workSheetReader(sheet)
 	if err != nil {
 		return err
@@ -295,6 +301,17 @@ func (f *File) SetCellFormula(sheet, axis, formula string) error {
 	} else {
 		cellData.F = &xlsxF{Content: formula}
 	}
+
+	for _, o := range opts {
+		if o.Type != nil {
+			cellData.F.T = *o.Type
+		}
+
+		if o.Ref != nil {
+			cellData.F.Ref = *o.Ref
+		}
+	}
+
 	return err
 }
 
@@ -378,7 +395,9 @@ func (f *File) SetCellHyperLink(sheet, axis, link, linkType string) error {
 		linkData = xlsxHyperlink{
 			Ref: axis,
 		}
-		rID := f.addSheetRelationships(sheet, SourceRelationshipHyperLink, link, linkType)
+		sheetPath, _ := f.sheetMap[trimSheetName(sheet)]
+		sheetRels := "xl/worksheets/_rels/" + strings.TrimPrefix(sheetPath, "xl/worksheets/") + ".rels"
+		rID := f.addRels(sheetRels, SourceRelationshipHyperLink, link, linkType)
 		linkData.RID = "rId" + strconv.Itoa(rID)
 	case "Location":
 		linkData = xlsxHyperlink{

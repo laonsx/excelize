@@ -209,16 +209,18 @@ type xlsxPane struct {
 // properties.
 type xlsxSheetPr struct {
 	XMLName                           xml.Name         `xml:"sheetPr"`
-	CodeName                          string           `xml:"codeName,attr,omitempty"`
-	EnableFormatConditionsCalculation *bool            `xml:"enableFormatConditionsCalculation,attr"`
-	FilterMode                        bool             `xml:"filterMode,attr,omitempty"`
-	Published                         *bool            `xml:"published,attr"`
 	SyncHorizontal                    bool             `xml:"syncHorizontal,attr,omitempty"`
 	SyncVertical                      bool             `xml:"syncVertical,attr,omitempty"`
+	SyncRef                           string           `xml:"syncRef,attr,omitempty"`
+	TransitionEvaluation              bool             `xml:"transitionEvaluation,attr,omitempty"`
+	Published                         *bool            `xml:"published,attr"`
+	CodeName                          string           `xml:"codeName,attr,omitempty"`
+	FilterMode                        bool             `xml:"filterMode,attr,omitempty"`
+	EnableFormatConditionsCalculation *bool            `xml:"enableFormatConditionsCalculation,attr"`
 	TransitionEntry                   bool             `xml:"transitionEntry,attr,omitempty"`
 	TabColor                          *xlsxTabColor    `xml:"tabColor,omitempty"`
-	PageSetUpPr                       *xlsxPageSetUpPr `xml:"pageSetUpPr,omitempty"`
 	OutlinePr                         *xlsxOutlinePr   `xml:"outlinePr,omitempty"`
+	PageSetUpPr                       *xlsxPageSetUpPr `xml:"pageSetUpPr,omitempty"`
 }
 
 // xlsxOutlinePr maps to the outlinePr element
@@ -627,13 +629,9 @@ type xlsxLegacyDrawing struct {
 
 // xlsxWorksheetExt directly maps the ext element in the worksheet.
 type xlsxWorksheetExt struct {
-	XMLName  xml.Name `xml:"ext"`
-	XMLNSX14 string   `xml:"xmlns:x14,attr,omitempty"`
-	XMLNSX15 string   `xml:"xmlns:x15,attr,omitempty"`
-	X14      string   `xml:"x14,attr,omitempty"`
-	X15      string   `xml:"x15,attr,omitempty"`
-	URI      string   `xml:"uri,attr"`
-	Content  string   `xml:",innerxml"`
+	XMLName xml.Name `xml:"ext"`
+	URI     string   `xml:"uri,attr"`
+	Content string   `xml:",innerxml"`
 }
 
 // decodeWorksheetExt directly maps the ext element.
