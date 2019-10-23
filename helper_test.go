@@ -32,14 +32,7 @@ func TestFillSheetCells(t *testing.T) {
 			},
 		})
 
-	file := NewFile()
-	err := file.FillSheetCells(sheets)
-	if err != nil {
-
-		t.Error(err)
-	}
-
-	err = file.SaveAs("./test/fillcells.xlsx")
+	err := SaveToXlsx(sheets, "./test/fillcells.xlsx")
 	if err != nil {
 
 		t.Error(err)

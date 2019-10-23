@@ -16,8 +16,6 @@ type (
 
 func (f *File) FillSheetCells(sheets Sheets) (err error) {
 
-	delSheet1 := true
-
 	for _, sheet := range sheets {
 
 		_ = f.NewSheet(sheet.Name)
@@ -63,16 +61,6 @@ func (f *File) FillSheetCells(sheets Sheets) (err error) {
 				}
 			}
 		}
-
-		if sheet.Name == "Sheet1" {
-
-			delSheet1 = false
-		}
-	}
-
-	if delSheet1 {
-
-		f.DeleteSheet("Sheet1")
 	}
 
 	return err
@@ -81,6 +69,8 @@ func (f *File) FillSheetCells(sheets Sheets) (err error) {
 func SaveToXlsx(sheets Sheets, path string) error {
 
 	file := NewFile()
+
+	file.SetSheetName("Sheet1", "data")
 
 	err := file.FillSheetCells(sheets)
 	if err != nil {
