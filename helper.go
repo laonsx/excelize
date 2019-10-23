@@ -1,81 +1,185 @@
 package excelize
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/laonsx/structs"
 )
 
+const (
+	FillSheet    = -1
+	PrepareSheet = 0
+)
+
 type (
-	Sheets []Sheet
+	Sheets []*Sheet
 	Sheet  struct {
-		Name string        `json:"name"`
-		Rows []interface{} `json:"rows"`
+		Name         string        `json:"name"`
+		Rows         []interface{} `json:"rows"`
+		NextSheet    int           // 0: 准备 -1:已完成
+		SheetMaxRows int
+		InitTitle    bool
+		sheetName    string
 	}
 )
 
-func (f *File) FillSheetCells(sheets Sheets) (err error) {
+func (s *Sheet) SheetName() string {
 
-	for _, sheet := range sheets {
+	if s.sheetName != "" {
 
-		_ = f.NewSheet(sheet.Name)
+		return s.sheetName
+	}
 
-		skip := 1
+	if s.NextSheet == PrepareSheet {
 
-		// 自动填充标题
-		if len(sheet.Rows) > 0 {
+		s.sheetName = s.Name
+	} else {
 
-			s := structs.New(sheet.Rows[0])
-			for _, field := range s.Fields() {
+		s.sheetName = s.Name + strconv.Itoa(s.NextSheet)
+	}
 
-				if skipCellField(field) {
+	return s.sheetName
+}
 
-					continue
-				}
+func (f *File) FillSheetCells(sheet *Sheet) (err error) {
 
-				err = f.SetCellValue(sheet.Name, fmt.Sprintf("%s%d", field.Tag("cell"), skip), getCellFieldTitle(field))
-				if err != nil {
+	_ = f.NewSheet(sheet.SheetName())
 
-					return err
-				}
+	// 自动填充标题
+	if sheet.InitTitle {
+
+		s := structs.New(sheet.Rows[0])
+		for _, field := range s.Fields() {
+
+			if skipCellField(field) {
+
+				continue
 			}
 
-			skip++
-		}
+			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag("cell"), 1), getCellFieldTitle(field))
+			if err != nil {
 
-		// 填充数据
-		for i, row := range sheet.Rows {
-
-			s := structs.New(row)
-			for _, field := range s.Fields() {
-
-				if skipCellField(field) {
-
-					continue
-				}
-
-				err = f.SetCellValue(sheet.Name, fmt.Sprintf("%s%d", field.Tag("cell"), i+skip), field.Value())
-				if err != nil {
-
-					return err
-				}
+				return err
 			}
 		}
 	}
+
+	nextRowIndex, err := f.nextAppendRowIndex(sheet.SheetName())
+	if err != nil {
+
+		return err
+	}
+
+	preRowIndex := nextRowIndex - 1
+
+	// 填充数据
+	for i := sheet.SheetMaxRows * sheet.NextSheet; i < len(sheet.Rows); i++ {
+
+		row := sheet.Rows[i]
+		s := structs.New(row)
+		for _, field := range s.Fields() {
+
+			if skipCellField(field) {
+
+				continue
+			}
+
+			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag("cell"), nextRowIndex), field.Value())
+			if err != nil {
+
+				return err
+			}
+		}
+
+		nextRowIndex++
+
+		if nextRowIndex-preRowIndex > sheet.SheetMaxRows {
+
+			sheet.NextSheet++
+			sheet.sheetName = ""
+
+			return nil
+		}
+	}
+
+	sheet.NextSheet = FillSheet
 
 	return err
 }
 
-func SaveToXlsx(sheets Sheets, path string) error {
+func AppendToSheet(sheets Sheets, path string) (err error) {
+
+	file, err := OpenFile(path)
+	if err != nil {
+
+		return err
+	}
+
+	for _, sheet := range sheets {
+
+		if sheet.NextSheet == FillSheet {
+
+			continue
+		}
+
+		err = file.FillSheetCells(sheet)
+		if err != nil {
+
+			return err
+		}
+
+		if sheet.NextSheet != FillSheet {
+
+			err = file.SaveAs(path)
+			if err != nil {
+
+				return err
+			}
+
+			return AppendToSheet(sheets, path)
+		}
+	}
+
+	err = file.SaveAs(path)
+	if err != nil {
+
+		return err
+	}
+
+	return nil
+}
+
+func SaveToXlsx(sheets Sheets, path string) (err error) {
 
 	file := NewFile()
 
 	file.SetSheetName("Sheet1", "data")
 
-	err := file.FillSheetCells(sheets)
-	if err != nil {
+	for _, sheet := range sheets {
 
-		return err
+		if sheet.NextSheet == FillSheet {
+
+			continue
+		}
+
+		err = file.FillSheetCells(sheet)
+		if err != nil {
+
+			return err
+		}
+
+		if sheet.NextSheet != FillSheet {
+
+			err = file.SaveAs(path)
+			if err != nil {
+
+				return err
+			}
+
+			return AppendToSheet(sheets, path)
+		}
 	}
 
 	err = file.SaveAs(path)
@@ -107,4 +211,21 @@ func getCellFieldTitle(field *structs.Field) string {
 	}
 
 	return title
+}
+
+func PrintInfo(path string) {
+
+	file, err := OpenFile(path)
+	if err != nil {
+
+		return
+	}
+
+	datas, err := json.Marshal(file)
+	if err != nil {
+
+		return
+	}
+
+	fmt.Println(string(datas))
 }

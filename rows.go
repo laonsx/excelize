@@ -122,6 +122,29 @@ func (f *File) Rows(sheet string) (*Rows, error) {
 	}, nil
 }
 
+func (f *File) nextAppendRowIndex(sheet string) (int, error) {
+
+	xlsx, err := f.workSheetReader(sheet)
+	if err != nil {
+
+		return 1, err
+	}
+
+	name, ok := f.sheetMap[trimSheetName(sheet)]
+	if !ok {
+		return 1, ErrSheetNotExist{sheet}
+
+	}
+
+	if xlsx != nil {
+
+		data := f.readXML(name)
+		f.saveFileList(name, replaceWorkSheetsRelationshipsNameSpaceBytes(namespaceStrictToTransitional(data)))
+	}
+
+	return len(xlsx.SheetData.Row) + 1, nil
+}
+
 // SetRowHeight provides a function to set the height of a single row. For
 // example, set the height of the first row in Sheet1:
 //
