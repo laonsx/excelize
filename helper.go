@@ -48,7 +48,7 @@ func (f *File) FillSheetCells(sheet *Sheet) (err error) {
 	_ = f.NewSheet(sheet.SheetName())
 
 	// 自动填充标题
-	if sheet.InitTitle {
+	if sheet.InitTitle && len(sheet.Rows) > 0 {
 
 		s := structs.New(sheet.Rows[0])
 		for _, field := range s.Fields() {
@@ -155,13 +155,16 @@ func SaveToXlsx(sheets Sheets, path string) (err error) {
 
 	file := NewFile()
 
-	file.SetSheetName("Sheet1", "data")
-
-	for _, sheet := range sheets {
+	for i, sheet := range sheets {
 
 		if sheet.NextSheet == FillSheet {
 
 			continue
+		}
+
+		if i == 0 {
+
+			file.SetSheetName("Sheet1", sheet.Name)
 		}
 
 		err = file.FillSheetCells(sheet)
