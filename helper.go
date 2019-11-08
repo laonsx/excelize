@@ -2,8 +2,11 @@ package excelize
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/laonsx/structs"
 )
@@ -231,4 +234,154 @@ func PrintInfo(path string) {
 	}
 
 	fmt.Println(string(datas))
+}
+
+var ErrNilPtr = errors.New("ErrNilPtr")
+var ErrNotStructPointer = errors.New("ErrNotStructPointer")
+
+func (rows *Rows) ReadStruct(ptr interface{}) error {
+	if ptr == nil {
+
+		return ErrNilPtr
+	}
+
+	v := reflect.ValueOf(ptr)
+	if v.Kind() != reflect.Ptr {
+
+		return ErrNotStructPointer
+	}
+
+	v = v.Elem()
+	if v.Kind() != reflect.Struct {
+
+		return ErrNotStructPointer
+	}
+
+	curRow := rows.rows[rows.curRow]
+	rows.curRow++
+
+	columns := make(map[string]string, len(curRow.C))
+	d := rows.f.sharedStringsReader()
+
+	for _, colCell := range curRow.C {
+
+		cell, _, err := SplitCellName(colCell.R)
+		if err != nil {
+
+			return err
+		}
+
+		val, _ := colCell.getValueFrom(rows.f, d)
+		columns[cell] = val
+	}
+
+	n := v.NumField()
+	for i := 0; i < n; i++ {
+
+		field := v.Type().Field(i)
+		cell := field.Tag.Get("cell")
+		if cell == "-" || cell == "" {
+
+			continue
+		}
+
+		value, ok := columns[cell]
+		if !ok {
+
+			continue
+		}
+
+		fieldV := v.Field(i)
+		if !fieldV.CanSet() {
+
+			continue
+		}
+
+		switch field.Type.Kind() {
+		case reflect.String:
+
+			fieldV.SetString(value)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+
+			vInt, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+
+				return err
+			}
+
+			fieldV.SetInt(vInt)
+		case reflect.Float64:
+
+			vFloat, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+
+				return err
+			}
+
+			fieldV.SetFloat(vFloat)
+		case reflect.Bool:
+
+			if value == "" || value == "0" {
+
+				fieldV.SetBool(false)
+			} else {
+
+				fieldV.SetBool(true)
+			}
+		case reflect.Ptr, reflect.Struct:
+
+			if !fieldV.CanSet() {
+
+				continue
+			}
+
+			var structPtr interface{}
+			if field.Type.Kind() == reflect.Struct {
+
+				structPtr = fieldV.Addr().Interface()
+			} else {
+
+				structPtr = fieldV.Interface()
+			}
+
+			_, isTime := structPtr.(*time.Time)
+			if isTime {
+
+				timeFormat := field.Tag.Get("time_format")
+
+				var vtime time.Time
+				var err error
+
+				if timeFormat != "" {
+
+					vtime, err = time.Parse(timeFormat, value)
+				} else {
+
+					vtime, err = time.Parse("2006-01-02 15:04:05", value)
+				}
+
+				if err != nil {
+
+					continue
+				}
+
+				if field.Type.Kind() == reflect.Ptr {
+
+					fieldV.Set(reflect.ValueOf(&vtime))
+				} else {
+
+					fieldV.Set(reflect.ValueOf(vtime))
+				}
+
+			} else {
+
+				// todo 继续读取子cell
+			}
+		}
+	}
+
+	value := v.Interface()
+	ptr = &value
+
+	return nil
 }

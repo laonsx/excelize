@@ -3,6 +3,7 @@ package excelize
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestFillSheetCells(t *testing.T) {
@@ -109,5 +110,42 @@ func TestFillSheetCells2(t *testing.T) {
 	if err != nil {
 
 		t.Error(err)
+	}
+}
+
+func TestRows_ReadStruct(t *testing.T) {
+
+	f, err := OpenFile("./test/test22.xlsx")
+	if err != nil {
+
+		t.Error(err)
+	}
+
+	rows, err := f.Rows("data")
+	if err != nil {
+
+		t.Error(err)
+	}
+
+	type TestRow struct {
+		H string    `cell:"A"`
+		W string    `cell:"B"`
+		F string    `cell:"C"`
+		S string    `cell:"D"`
+		T time.Time `cell:"E" time_format:"20060102150405"`
+		E string    `cell:"F"`
+	}
+
+	for rows.Next() {
+
+		row := &TestRow{}
+
+		err = rows.ReadStruct(row)
+		if err != nil {
+
+			t.Error(err)
+		}
+
+		t.Log(row)
 	}
 }
