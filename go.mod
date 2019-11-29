@@ -1,4 +1,4 @@
-module github.com/360EntSecGroup-Skylar/excelize
+module github.com/laonsx/excelize
 
 go 1.12
 
