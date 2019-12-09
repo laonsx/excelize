@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	FillSheet    = -1
-	PrepareSheet = 0
+	FillSheet     = -1
+	PrepareSheet  = 0
+	TimeFormatTag = "time_format"
 )
 
 type (
@@ -89,7 +90,13 @@ func (f *File) FillSheetCells(sheet *Sheet) (err error) {
 				continue
 			}
 
-			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag("cell"), nextRowIndex), field.Value())
+			fieldValue := field.Value()
+			if v, ok := cellTimeField(field); ok {
+
+				fieldValue = v
+			}
+
+			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag("cell"), nextRowIndex), fieldValue)
 			if err != nil {
 
 				return err
@@ -217,6 +224,22 @@ func getCellFieldTitle(field *structs.Field) string {
 	}
 
 	return title
+}
+
+func cellTimeField(field *structs.Field) (interface{}, bool) {
+
+	t, ok := field.Value().(time.Time)
+	if !ok {
+
+		return nil, false
+	}
+
+	if field.Tag(TimeFormatTag) == "" || field.Tag(TimeFormatTag) == "-" {
+
+		return t.String(), true
+	}
+
+	return t.Format(field.Tag(TimeFormatTag)), true
 }
 
 func PrintInfo(path string) {
@@ -347,7 +370,7 @@ func (rows *Rows) ReadStruct(ptr interface{}) error {
 			_, isTime := structPtr.(*time.Time)
 			if isTime {
 
-				timeFormat := field.Tag.Get("time_format")
+				timeFormat := field.Tag.Get(TimeFormatTag)
 
 				var vtime time.Time
 				var err error

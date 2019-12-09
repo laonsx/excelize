@@ -14,6 +14,8 @@ func TestFillSheetCells(t *testing.T) {
 		C int    `cell:"C" title:"TITLE-C"`
 		D string `cell:"-" title:"DDDDD"`
 		E string
+		F time.Time `cell:"D" title:"time" time_format:"-"`
+		G time.Time `cell:"E" title:"time" time_format:"2006-01-02 15:04:05"`
 	}
 
 	var sheets Sheets
@@ -22,11 +24,11 @@ func TestFillSheetCells(t *testing.T) {
 		&Sheet{
 			Name: "data",
 			Rows: []interface{}{
-				&Row{A: "a1", B: "b1", C: 1, D: "d1"},
+				&Row{A: "a1", B: "b1", C: 1, D: "d1", F: time.Now(), G: time.Now()},
 				&Row{A: "a2", B: "b2", C: 2, D: "d2"},
 				&Row{A: "a3", B: "b3", C: 2, D: "d3"},
 				&Row{A: "a4", B: "b4", C: 2, D: "d4"},
-				&Row{A: "a5", B: "b5", C: 2, D: "d5"},
+				&Row{A: "a5", B: "b5", C: 2, D: "d5", F: time.Now()},
 			},
 			SheetMaxRows: 2,
 			InitTitle:    true,
