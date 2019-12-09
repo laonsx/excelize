@@ -12,11 +12,12 @@ import (
 )
 
 const (
-	FillSheet     = -1
-	PrepareSheet  = 0
-	TimeFormatTag = "time_format" // tag:时间格式化
-	CellTag       = "cell"        // tag:列信息
-	TitleTag      = "title"       // tag:列标题
+	FillSheet                 = -1
+	PrepareSheet              = 0
+	TimeFormatTag             = "time_format" // tag:时间格式化
+	CellTag                   = "cell"        // tag:列信息
+	TitleTag                  = "title"       // tag:列标题
+	DefaultTimeFormatTemplate = "2006-01-02 15:04:05"
 )
 
 type (
@@ -238,7 +239,7 @@ func cellTimeField(field *structs.Field) (interface{}, bool) {
 
 	if field.Tag(TimeFormatTag) == "" || field.Tag(TimeFormatTag) == "-" {
 
-		return t.String(), true
+		return t.Format(DefaultTimeFormatTemplate), true
 	}
 
 	return t.Format(field.Tag(TimeFormatTag)), true
@@ -377,12 +378,12 @@ func (rows *Rows) ReadStruct(ptr interface{}) error {
 				var vtime time.Time
 				var err error
 
-				if timeFormat != "" {
+				if timeFormat != "" && timeFormat != "-" {
 
 					vtime, err = time.Parse(timeFormat, value)
 				} else {
 
-					vtime, err = time.Parse("2006-01-02 15:04:05", value)
+					vtime, err = time.Parse(DefaultTimeFormatTemplate, value)
 				}
 
 				if err != nil {

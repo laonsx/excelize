@@ -15,7 +15,7 @@ func TestFillSheetCells(t *testing.T) {
 		D string `cell:"-" title:"DDDDD"`
 		E string
 		F time.Time `cell:"D" title:"time" time_format:"-"`
-		G time.Time `cell:"E" title:"time" time_format:"2006-01-02 15:04:05"`
+		G time.Time `cell:"E" title:"time" time_format:"2006/01/02 15:04:05"`
 	}
 
 	var sheets Sheets
