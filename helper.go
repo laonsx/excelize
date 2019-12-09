@@ -14,7 +14,9 @@ import (
 const (
 	FillSheet     = -1
 	PrepareSheet  = 0
-	TimeFormatTag = "time_format"
+	TimeFormatTag = "time_format" // tag:时间格式化
+	CellTag       = "cell"        // tag:列信息
+	TitleTag      = "title"       // tag:列标题
 )
 
 type (
@@ -62,7 +64,7 @@ func (f *File) FillSheetCells(sheet *Sheet) (err error) {
 				continue
 			}
 
-			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag("cell"), 1), getCellFieldTitle(field))
+			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag(CellTag), 1), getCellFieldTitle(field))
 			if err != nil {
 
 				return err
@@ -96,7 +98,7 @@ func (f *File) FillSheetCells(sheet *Sheet) (err error) {
 				fieldValue = v
 			}
 
-			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag("cell"), nextRowIndex), fieldValue)
+			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag(CellTag), nextRowIndex), fieldValue)
 			if err != nil {
 
 				return err
@@ -206,7 +208,7 @@ func SaveToXlsx(sheets Sheets, path string) (err error) {
 
 func skipCellField(field *structs.Field) bool {
 
-	cellTag := field.Tag("cell")
+	cellTag := field.Tag(CellTag)
 	if cellTag == "-" || cellTag == "" {
 
 		return true
@@ -217,7 +219,7 @@ func skipCellField(field *structs.Field) bool {
 
 func getCellFieldTitle(field *structs.Field) string {
 
-	title := field.Tag("title")
+	title := field.Tag(TitleTag)
 	if title == "" {
 
 		title = field.Name()
@@ -302,7 +304,7 @@ func (rows *Rows) ReadStruct(ptr interface{}) error {
 	for i := 0; i < n; i++ {
 
 		field := v.Type().Field(i)
-		cell := field.Tag.Get("cell")
+		cell := field.Tag.Get(CellTag)
 		if cell == "-" || cell == "" {
 
 			continue
