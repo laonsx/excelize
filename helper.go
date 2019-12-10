@@ -237,12 +237,13 @@ func cellTimeField(field *structs.Field) (interface{}, bool) {
 		return nil, false
 	}
 
-	if field.Tag(TimeFormatTag) == "" || field.Tag(TimeFormatTag) == "-" {
+	timeFormat := field.Tag(TimeFormatTag)
+	if timeFormat == "" || timeFormat == "-" {
 
 		return t.Format(DefaultTimeFormatTemplate), true
 	}
 
-	return t.Format(field.Tag(TimeFormatTag)), true
+	return t.Format(timeFormat), true
 }
 
 func PrintInfo(path string) {
