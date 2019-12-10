@@ -65,6 +65,8 @@ func (f *File) FillSheetCells(sheet *Sheet) (err error) {
 				continue
 			}
 
+			// todo 合并单元格情况
+
 			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag(CellTag), 1), getCellFieldTitle(field))
 			if err != nil {
 
@@ -98,6 +100,8 @@ func (f *File) FillSheetCells(sheet *Sheet) (err error) {
 
 				fieldValue = v
 			}
+
+			// todo 填充子struct
 
 			err = f.SetCellValue(sheet.SheetName(), fmt.Sprintf("%s%d", field.Tag(CellTag), nextRowIndex), fieldValue)
 			if err != nil {
