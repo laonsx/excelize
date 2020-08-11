@@ -271,6 +271,7 @@ var ErrNilPtr = errors.New("ErrNilPtr")
 var ErrNotStructPointer = errors.New("ErrNotStructPointer")
 
 func (rows *Rows) ReadStruct(ptr interface{}) error {
+
 	if ptr == nil {
 
 		return ErrNilPtr
@@ -415,4 +416,45 @@ func (rows *Rows) ReadStruct(ptr interface{}) error {
 	ptr = &value
 
 	return nil
+}
+
+func (f *File) AppendSheetRow(sheet string, startCellName string, slice interface{}) error {
+
+	col, err := ColumnNameToNumber(startCellName)
+	if err != nil {
+
+		return err
+	}
+
+	row, err := f.nextAppendRowIndex(sheet)
+	if err != nil {
+
+		return err
+	}
+
+	v := reflect.ValueOf(slice)
+	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Slice {
+
+		return errors.New("pointer to slice expected")
+	}
+
+	v = v.Elem()
+
+	for i := 0; i < v.Len(); i++ {
+
+		cell, err := CoordinatesToCellName(col+i, row)
+		// Error should never happens here. But keep checking to early detect regresions
+		// if it will be introduced in future.
+		if err != nil {
+
+			return err
+		}
+
+		if err := f.SetCellValue(sheet, cell, v.Index(i).Interface()); err != nil {
+
+			return err
+		}
+	}
+
+	return err
 }
